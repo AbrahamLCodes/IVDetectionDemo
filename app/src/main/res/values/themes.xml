@@ -3,6 +3,9 @@
     <style name="Base.Theme.IVDetectionDemo" parent="Theme.MaterialComponents.Light.NoActionBar">
         <!-- Customize your light theme here. -->
         <!-- <item name="colorPrimary">@color/my_light_primary</item> -->
+        <item name="colorPrimary">#5eb7b7</item>
+        <item name="colorPrimaryDark">#5eb7b7</item>
+
     </style>
 
     <style name="Theme.IVDetectionDemo" parent="Base.Theme.IVDetectionDemo" />
