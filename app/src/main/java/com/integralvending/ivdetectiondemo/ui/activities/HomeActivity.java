@@ -9,8 +9,8 @@ import android.view.View;
 import com.integralvending.ivdetectiondemo.R;
 import com.integralvending.ivdetectiondemo.databinding.ActivityHomeBinding;
 import com.integralvending.ivdetectiondemo.ui.adapters.RvArticulosAdapter;
-import com.integralvending.ivdetectiondemo.ui.data.MockData;
-import com.integralvending.ivdetectiondemo.ui.utils.USwal;
+import com.integralvending.ivdetectiondemo.data.MockData;
+import com.integralvending.ivdetectiondemo.utils.USwal;
 
 import cn.pedant.SweetAlert.SweetAlertDialog;
 

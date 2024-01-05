@@ -1,6 +1,6 @@
-package com.integralvending.ivdetectiondemo.ui.data;
+package com.integralvending.ivdetectiondemo.data;
 
-import com.integralvending.ivdetectiondemo.ui.models.MArticulo;
+import com.integralvending.ivdetectiondemo.models.MArticulo;
 
 import java.util.ArrayList;
 

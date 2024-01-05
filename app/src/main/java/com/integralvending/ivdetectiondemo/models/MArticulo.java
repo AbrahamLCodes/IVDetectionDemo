@@ -1,4 +1,4 @@
-package com.integralvending.ivdetectiondemo.ui.models;
+package com.integralvending.ivdetectiondemo.models;
 
 public class MArticulo {
 

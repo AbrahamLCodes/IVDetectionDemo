@@ -1,4 +1,4 @@
-package com.integralvending.ivdetectiondemo.ui.utils;
+package com.integralvending.ivdetectiondemo.utils;
 
 import android.content.Context;
 

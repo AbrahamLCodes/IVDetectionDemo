@@ -1,18 +1,13 @@
 package com.integralvending.ivdetectiondemo.ui.adapters;
 
-import android.content.Context;
-import android.util.Log;
 import android.view.LayoutInflater;
-import android.view.View;
 import android.view.ViewGroup;
-import android.widget.TextView;
 
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.integralvending.ivdetectiondemo.R;
 import com.integralvending.ivdetectiondemo.databinding.RowArticuloBinding;
-import com.integralvending.ivdetectiondemo.ui.models.MArticulo;
+import com.integralvending.ivdetectiondemo.models.MArticulo;
 
 import java.util.ArrayList;
 
