@@ -44,4 +44,13 @@ dependencies {
     androidTestImplementation("androidx.test.espresso:espresso-core:3.5.1")
 
     implementation("com.github.f0ris.sweetalert:library:1.6.2")
+
+    implementation ("com.quickbirdstudios:opencv-contrib:3.4.15")
+
+    implementation("com.google.mlkit:text-recognition:16.0.0")
+
+
+
+
+
 }

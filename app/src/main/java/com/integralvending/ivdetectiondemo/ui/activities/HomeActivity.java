@@ -3,6 +3,8 @@ package com.integralvending.ivdetectiondemo.ui.activities;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.recyclerview.widget.LinearLayoutManager;
 
+import android.content.Context;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 
@@ -10,9 +12,6 @@ import com.integralvending.ivdetectiondemo.R;
 import com.integralvending.ivdetectiondemo.databinding.ActivityHomeBinding;
 import com.integralvending.ivdetectiondemo.ui.adapters.RvArticulosAdapter;
 import com.integralvending.ivdetectiondemo.data.MockData;
-import com.integralvending.ivdetectiondemo.utils.USwal;
-
-import cn.pedant.SweetAlert.SweetAlertDialog;
 
 public class HomeActivity extends AppCompatActivity implements View.OnClickListener {
 
@@ -32,11 +31,14 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     public void onClick(View view) {
         int id = view.getId();
 
-        if (id == R.id.btnEscanear) onClickBtnEscanear();
+        if (id == R.id.btnEscanear) onClickBtnEscanear(view.getContext());
+        if (id== R.id.btnConfiguracion) onClickcBtnConfiguracion(view.getContext());
+
     }
 
     private void initComponents() {
         binding.btnEscanear.setOnClickListener(this);
+        binding.btnConfiguracion.setOnClickListener(this);
         setMockData();
     }
 
@@ -53,12 +55,17 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
         binding.rvArticulos.setAdapter(adapter);
     }
 
-    private void onClickBtnEscanear() {
-        USwal.alertaOk(
-                "Acción en construcción",
-                "Funcionalidad aún no disponible",
-                SweetAlertDialog.WARNING_TYPE,
-                this
-        );
+    private void onClickBtnEscanear(Context context) {
+
+        Intent intent = new Intent(context, CamaraActivity.class);
+        context.startActivity(intent);
+
+       // USwal.alertaOk("Acción en construcción", "Funcionalidad aún no disponible", SweetAlertDialog.WARNING_TYPE, this);
+    }
+
+    private void onClickcBtnConfiguracion (Context context) {
+        Intent intent = new Intent(context, CharolaActivity.class);
+        context.startActivity(intent);
+
     }
 }

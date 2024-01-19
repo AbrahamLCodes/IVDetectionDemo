@@ -7,6 +7,7 @@ public class MArticulo {
     private String idDetection;
     private int cantidad;
 
+
     public MArticulo(int idArticulo, String nombre, String idDetection, int cantidad) {
         this.idArticulo = idArticulo;
         this.nombre = nombre;
