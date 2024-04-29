@@ -6,6 +6,7 @@ import androidx.recyclerview.widget.LinearLayoutManager;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.View;
 
 import com.integralvending.ivdetectiondemo.R;
@@ -28,6 +29,12 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        setMockData();
+    }
+
+    @Override
     public void onClick(View view) {
         int id = view.getId();
 
@@ -43,6 +50,9 @@ public class HomeActivity extends AppCompatActivity implements View.OnClickListe
     }
 
     private void setMockData() {
+
+        Log.wtf("asdasd", "SettingUp MockData");
+
         RvArticulosAdapter adapter = new RvArticulosAdapter(MockData.getMockData());
 
         LinearLayoutManager manager = new LinearLayoutManager(

@@ -8,17 +8,21 @@ import java.util.ArrayList;
 public class MockData {
 
     private static ArrayList<MCharola> updatedCharolas = new ArrayList<>();
+    private static ArrayList<MArticulo> updateMockData = new ArrayList<>();
 
     public static ArrayList<MArticulo> getMockData() {
+        if(!updateMockData.isEmpty()) return updateMockData;
+
         ArrayList<MArticulo> result = new ArrayList<>();
 
-        result.add(new MArticulo(1, "Ruffles", "SR", 0));
-        result.add(new MArticulo(2, "Doritos", "SD", 0));
-        result.add(new MArticulo(3, "Takis", "BT", 0));
-        result.add(new MArticulo(4, "Runners", "BR", 0));
-        result.add(new MArticulo(5, "Rancheritos", "SRA", 0));
-        result.add(new MArticulo(6, "Sabritas", "SS", 0));
+        result.add(new MArticulo(1, "ChettosNaranjas", "SR", 0));
+        result.add(new MArticulo(2, "DoritosNegros", "SD", 0));
+        result.add(new MArticulo(3, "ChipsMoradas", "BT", 0));
+        result.add(new MArticulo(4, "ChipsAmarillas", "BR", 0));
+        result.add(new MArticulo(5, "ChettosVerdes", "SRA", 0));
+        result.add(new MArticulo(6, "ChettosFlamitHot", "SS", 0));
 
+        // label_map = {1: 'ChettosNaranjas', 2: 'ChipsMoradas', 3:'DoritosNegros'}
         return result;
     }
 
@@ -40,6 +44,8 @@ public class MockData {
     public static void updateCharolas(ArrayList<MCharola> charolas) {
         updatedCharolas = charolas;
     }
-
+    public static void updateMockData(ArrayList<MArticulo> articulos) {
+        updateMockData = articulos;
+    }
 
 }

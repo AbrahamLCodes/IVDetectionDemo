@@ -1,12 +1,21 @@
 package com.integralvending.ivdetectiondemo.ui.activities;
 
+import static org.tensorflow.lite.task.vision.detector.ObjectDetector.createFromFileAndOptions;
+
+import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
+import android.graphics.Rect;
+import android.graphics.RectF;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.View;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -22,10 +31,13 @@ import com.integralvending.ivdetectiondemo.R;
 import com.integralvending.ivdetectiondemo.data.MockData;
 import com.integralvending.ivdetectiondemo.models.MArticulo;
 import com.integralvending.ivdetectiondemo.models.MCharola;
-import com.integralvending.ivdetectiondemo.ui.adapters.ImageAdapter;
-import com.integralvending.ivdetectiondemo.ui.adapters.RvArticulosAdapter;
-import com.integralvending.ivdetectiondemo.utils.USwal;
 
+import org.tensorflow.lite.support.image.TensorImage;
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.task.vision.detector.Detection;
+import org.tensorflow.lite.task.vision.detector.ObjectDetector;
+
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
@@ -33,14 +45,22 @@ import java.util.Objects;
 import cn.pedant.SweetAlert.SweetAlertDialog;
 
 
-public class FullScreenImageActivity extends AppCompatActivity {
+public class FullScreenImageActivity extends AppCompatActivity implements View.OnClickListener {
 
+    private static final float MAX_FONT_SIZE = 96F;
     private ImageView inputImageView;
     private TextRecognizer textRecognizer;
     private TextView tvTextoReconocido, tvTextoIncorrecto;
-    private MockData  instancia = new MockData();
+    private MockData instancia = new MockData();
     private ArrayList<MArticulo> Articulos = instancia.getMockData();
     private ArrayList<MCharola> Charolas = instancia.getCharola();
+    private int numCharolaRecibido = 0;
+    private int contador = 0, contadorerroneo =0,RP=0,DP=0;
+    private final List<Detection>results;
+
+    public FullScreenImageActivity() {
+        this.results = new ArrayList<>();
+    }
 
     @Override
     protected void onCreate(@Nullable Bundle savedInstanceState) {
@@ -50,6 +70,9 @@ public class FullScreenImageActivity extends AppCompatActivity {
         inputImageView = findViewById(R.id.fullScreenImageView);
         tvTextoReconocido = findViewById(R.id.tvTextoReconocido);
         tvTextoIncorrecto = findViewById(R.id.tvTextoIncorrecto);
+
+        Button btnGuardar = findViewById(R.id.btnGuardar);
+        btnGuardar.setOnClickListener(this);
 
 
         // Obtener datos del intent
@@ -65,170 +88,226 @@ public class FullScreenImageActivity extends AppCompatActivity {
         // Configurar el reconocedor de texto
         textRecognizer = TextRecognition.getClient(TextRecognizerOptions.DEFAULT_OPTIONS);
 
-        reconocerTextoDeImagen(bitmap);
+        try {
+            // Ejecutar la detección de objetos automáticamente al abrir la actividad
+            runObjectDetection(bitmap);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        debugPrint(results);
     }
 
+    private void runObjectDetection(Bitmap bitmap) throws IOException {
+        if (bitmap != null) {
+            TensorImage image = TensorImage.fromBitmap(bitmap);
 
-    private void reconocerTextoDeImagen(Bitmap bitmap) {
-        int numeroMCharolaRecibido = getIntent().getIntExtra("NUMERO_MCHAROLA", -1);
-        // NumeroMCharola es el numero del producto en la charola
-        // se hace la compracion que es el del numero del producto
-        Log.d("Charola", "La charola recibida es " + numeroMCharolaRecibido);
+            ObjectDetector.ObjectDetectorOptions options = ObjectDetector.ObjectDetectorOptions.builder()
+                    .setMaxResults(10)
+                    .setScoreThreshold(0.30f) // 0.45 funciona bien para los doritos y chettos Naranjas
+                    .build();
+            ObjectDetector detector = createFromFileAndOptions(
+                    this,
+                    "polboderozazzz.tflite",
+                    options
+            );
 
-        String finalcodigo = null;
-        String finalnombre = null, NombreIncorrecto = null;
-        List<String> finalcodigoIncorrecto = new ArrayList<>();
+            // silletrained_model
+            //bikinicodde
+            //supinchemadre
+            //Strained_modelnew
+            // pincOpen.tflite
+            //polboderozazzz tal vez este tambien
+            //ondeado_model jala bien
+            //Makinatrained_model     //
 
-        int FinalNumeroCharola = 0;
-        int FinalNumeroArt = 0;
-        int NCharola =0;
-        int FinalIdArticulo=0;
+            // Realizar la detección de objetos
+            List<Detection> results = detector.detect(image);
 
-        for (MCharola charola : Charolas){
-            Log.d("Charolas","Las charolas son: "+ charola);
-            FinalNumeroCharola = charola.getIdRectangulo();
-            FinalNumeroArt = charola.getNumero();
-
-            for (MArticulo articulo : Articulos) {
-
-                Log.d("Articulos", "Los articulos son:" + articulo);
-                if (articulo.getIdArticulo() == numeroMCharolaRecibido) {
-                    finalcodigo = articulo.getIdDetection();
-                    finalnombre = articulo.getNombre();
-                    FinalIdArticulo = articulo.getIdArticulo();
-                }
-                else {
-                    finalcodigoIncorrecto.add(articulo.getIdDetection());
-                    Log.d("Nuemroscorrectos","Los codigos incorrectos son "+finalcodigoIncorrecto);
+            // Procesar los resultados para mostrar en la imagen
+            List<DetectionResult> resultToDisplay = new ArrayList<>();
+            for (Detection detection : results) {
+                if (detection.getCategories() != null && !detection.getCategories().isEmpty()) {
+                    Category category = detection.getCategories().get(0);
+                    String text = category.getLabel() + ", " + (int) (category.getScore() * 100) + "%";
+                    resultToDisplay.add(new DetectionResult(detection.getBoundingBox(), text));
                 }
             }
 
-            // Esto lo estoy utilizando para tener el valor de cada articulo con su respectiva
-            // Charola
-            if (FinalNumeroArt == FinalIdArticulo) {
-                 NCharola = FinalNumeroCharola;
-                Log.d("Numero de charola","El numero de la charola es el "+FinalNumeroCharola);
+            // Dibujar los resultados en la imagen y mostrarla en el hilo de la interfaz de usuario
+            Bitmap imgWithResult = drawDetectionResult(bitmap, resultToDisplay);
+            runOnUiThread(() -> {
+                inputImageView.setImageBitmap(imgWithResult);
+                debugPrint(results);  // Llamar a debugPrint después de mostrar la imagen con resultados
+            });
+            // Liberar recursos del detector
+            detector.close();
+        } else {
+            // Manejar el caso en que la imagen es nula
+            Log.e("DEBUG_TAG", "La imagen es nula");
+        }
+    }
+
+    @SuppressLint("SetTextI18n")
+    private void debugPrint(List<Detection> results) {
+        numCharolaRecibido = getIntent().getIntExtra("NUMERO_MCHAROLA", -1);
+        // NumeroMCharola es el numero del producto en la charola
+        // se hace la compracion que es el del numero del producto
+        Log.d("Charola", "La charola recibida es " + numCharolaRecibido);
+
+        String finalnombre = null, NombreIncorrecto = null;
+        List<String> finalnombreincorrecto = new ArrayList<>();
+
+
+        int FinalIdArticulo = 0;
+        int NCharola =0;
+
+        for (MCharola charola: Charolas){
+            NCharola = charola.getIdRectangulo();
+
+
+            for(MArticulo articulo: Articulos){
+                Log.d("Articulos", "Los articulos son:" + articulo);
+                if (articulo.getIdArticulo() == numCharolaRecibido) {
+                    finalnombre = articulo.getNombre();
+                    FinalIdArticulo = articulo.getIdArticulo();
+
+                }
+                else {
+                    finalnombreincorrecto.add(articulo.getIdDetection());
+                    Log.d("Nombreincorrecto", "Los nombres son incorrectos son " + finalnombreincorrecto);
+                }
             }
         }
 
-        // Crear una instancia de InputImage desde el bitmap
-        InputImage inputImage = InputImage.fromBitmap(bitmap, 0);
+        String m = finalnombre ;
 
-        final String codigo = finalcodigo;
-        final List<String> CodigoErroneo = finalcodigoIncorrecto;
-        final String nombre = finalnombre;
-        final int NumeroCharola = NCharola;
+        // M es el nombre del producto y category tambien es donde
+        // Se debe comparar tengo que guardar m
+        // Croe que tengo mal la comparacion con la charola
+        // Estoy mandando a llamar el id articulo
 
-
-        // Procesar la imagen y reconocer el texto
-        textRecognizer.process(inputImage)
-                .addOnSuccessListener(text -> {
-                    // Manipular el texto reconocido aquí
-                    String textoReconocido = text.getText();
-
-                    // Inicializar contador de palabras que cumplen con los criterios
-                    int contadorPalabras = 0,  CharolaArtIncorrecto=0;
-                    int contadorIncorrecto = 0;
-
-                    // Dividir el texto en palabras usando un espacio como separador
-                    String[] palabras = textoReconocido.split("\\s+");
-
-                    String nombreerroneo = null;
-                    int i = 0, Ci = 0, Chi=0;
-
-                    String producto = null;
-                    for (String palabra : palabras) {
-                        if (palabra.contains(codigo)) {
-                            Log.d("PalabraConCodigo", palabra);
-
-                            // Incrementar el contador de palabras
-                            contadorPalabras++;
+        if (results != null) {
+            DP = 0;
+            RP = 0;
+            for (int i = 0; i < results.size(); i++) {
+                Detection obj = results.get(i);
+                List<Category> categories = obj.getCategories();
+                if (categories != null) {
+                    for (int j = 0; j < categories.size(); j++) {
+                        Category category = categories.get(j);
+                        Log.d("LARAZA", "category.getLabel(): " + category.getLabel());
+                        Log.d("LARAZA", "m: " + m);
+                        if (category.getLabel().trim().equals(m)) {
+                            RP++;
+                            runOnUiThread(() -> tvTextoReconocido.setText("El producto detectado es "+ m + " y la cantidad es " + RP+ " en la charola "+numCharolaRecibido));
+                        } else {
+                            DP++;
+                            String nombreIncorrecto = category.getLabel().trim();
+                            runOnUiThread(() -> {
+                                tvTextoIncorrecto.setText("Producto incorrecto  " + nombreIncorrecto + ", Cantidad: " + DP );
+                                // Imprimir el nombre y la cantidad del producto incorrecto
+                                Log.d("ProductoIncorrecto", "Nombre: " + nombreIncorrecto + ", Cantidad: " + DP + ", Charola: ");
+                            });
                         }
-                            if (!palabra.contains(codigo)) {
-                                producto = palabra;
-                                contadorIncorrecto++;
-                                for (MCharola charola : Charolas){
-                                    Ci = charola.getNumero();
-                                    Chi = charola.getIdRectangulo();
-
-                                    for (MArticulo articulo : Articulos) {
-                                        if (Objects.equals(articulo.getIdDetection(), producto)) {
-                                            nombreerroneo = articulo.getNombre();
-                                            i = articulo.getIdArticulo();
-                                        }
-                                    }
-
-                                    if (i == Ci) {
-                                        CharolaArtIncorrecto = Chi;
-                                    }
-
-                                }
-                                final int NcharolaArtIncorrecto = CharolaArtIncorrecto;
-                                final String nombreErr = nombreerroneo;
-                                if (nombreErr != null){
-                                    Log.d("PalabraINC", "Se detecto un producto incorrecto en esta charola " + nombreErr + " y pertemece a la charola  " + NcharolaArtIncorrecto);
-
-                                    // Construir el mensaje a mostrar en el TextView
-                                    String mensaje = "Se detectó un producto incorrecto en esta charola " + nombreErr +
-                                            " y pertenece a la charola " + NcharolaArtIncorrecto+".";
-
-                                    // Obtener el texto actual del TextView (si hay alguno)
-                                    String textoActual = tvTextoIncorrecto.getText().toString();
-
-                                    // Agregar el nuevo mensaje al texto existente (puedes ajustar el formato según tus necesidades)
-                                    String nuevoTexto = textoActual + "\n" + mensaje;
-
-                                    tvTextoIncorrecto.setText(nuevoTexto);
-                                }
-
-
-
-                            }
                     }
+                }
+            }
+        }
+    }
 
-                    if (contadorPalabras >= 1){
-                        Log.d("productos", "El producto es " + nombre + " y el total es de " + contadorPalabras);
+    @Override
+    public void onClick(View view) {
+        int id = view.getId();
+        if (id == R.id.btnGuardar) onClickbtnGuardar();
+    }
 
-                        tvTextoReconocido.setText("El producto es " + nombre + " y el total es de " + contadorPalabras + " en la charola " + NumeroCharola+".");
+    private void onClickbtnGuardar() {
+        // Encontrar el index del articulo en el ArrayList de MockData
+        int index = 0;
 
+        MArticulo mArticulo = null;
+        for (int i = 0; i < MockData.getMockData().size(); i++) {
+            mArticulo = MockData.getMockData().get(i);
+            if (mArticulo.getIdArticulo() == numCharolaRecibido) {
+                index = i;
+                break;
+            }
+        }
 
-                    }else {
-                        USwal.alertaOk("Error al reconocer", "No se detecto ningun producto en la charola vuelva a tomar la foto.", SweetAlertDialog.WARNING_TYPE, this);
-                    }
+        //Actualizar cantidad del articulo
+        mArticulo.setCantidad(RP);
 
-                    // Crear un nuevo Bitmap con el texto superpuesto
-                    Bitmap bitmapWithText = drawTextOnBitmap(bitmap, textoReconocido);
+        // Actualizar articulo en MockData
+        ArrayList<MArticulo> currentMockData = MockData.getMockData();
+        currentMockData.set(index, mArticulo);
 
+        MockData.updateMockData(currentMockData);
 
-                    // Establecer el nuevo Bitmap en el ImageView
-                    inputImageView.setImageBitmap(bitmapWithText);
-                })
-                .addOnFailureListener(e -> {
-                    // Manejar errores
-                    Toast.makeText(FullScreenImageActivity.this, "Error: " + e.getMessage(), Toast.LENGTH_SHORT).show();
-                });
+        finish();
     }
 
 
-    private Bitmap drawTextOnBitmap(Bitmap originalBitmap, String text) {
-        // Copiar el bitmap original para evitar cambios permanentes
-        Bitmap bitmapCopy = originalBitmap.copy(originalBitmap.getConfig(), true);
+    private Bitmap drawDetectionResult(Bitmap bitmap, List<DetectionResult> detectionResults) {
+        Bitmap outputBitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(outputBitmap);
+        Paint pen = new Paint();
+        pen.setTextAlign(Paint.Align.LEFT);
 
-        // Crear un lienzo para dibujar sobre el bitmap copiado
-        Canvas canvas = new Canvas(bitmapCopy);
+        for (DetectionResult result : detectionResults) {
+            // Dibujar el cuadro delimitador
+            pen.setColor(Color.RED);
+            pen.setStrokeWidth(8F);
+            pen.setStyle(Paint.Style.STROKE);
+            RectF box = result.getBoundingBox();
+            canvas.drawRect(box, pen);
 
-        // Configurar el pincel para el texto
-        Paint paint = new Paint();
-        paint.setColor(Color.RED);  // Color del texto
-        paint.setTextSize(30);      // Tamaño del texto
+            Rect tagSize = new Rect(0, 0, 0, 0);
 
-        // Calcular la posición para centrar el texto
-        float x = (canvas.getWidth() - paint.measureText(text)) / 2;
-        float y = canvas.getHeight() - 50;  // Altura desde la parte inferior
+            // Calcular el tamaño correcto de la fuente
+            pen.setStyle(Paint.Style.FILL_AND_STROKE);
+            pen.setColor(Color.YELLOW);
+            pen.setStrokeWidth(2F);
 
-        // Dibujar el texto en el lienzo
-        canvas.drawText(text, x, y, paint);
+            pen.setTextSize(MAX_FONT_SIZE);
+            pen.getTextBounds(result.getText(), 0, result.getText().length(), tagSize);
+            float fontSize = pen.getTextSize() * box.width() / tagSize.width();
 
-        return bitmapCopy;
+            // Ajustar el tamaño de la fuente para que el texto esté dentro del cuadro delimitador
+            if (fontSize < pen.getTextSize()) pen.setTextSize(fontSize);
+
+            float margin = (box.width() - tagSize.width()) / 2.0F;
+            if (margin < 0F) margin = 0F;
+            canvas.drawText(
+                    result.getText(), box.left + margin,
+                    box.top + tagSize.height() * 1F, pen
+            );
+        }
+        return outputBitmap;
+    }
+
+    @Override
+    public void onPointerCaptureChanged(boolean hasCapture) {
+        super.onPointerCaptureChanged(hasCapture);
+    }
+
+
+}
+
+class DetectionResult {
+    private final RectF boundingBox;
+    private final String text;
+
+    public DetectionResult(RectF boundingBox, String text) {
+        this.boundingBox = boundingBox;
+        this.text = text;
+    }
+
+    public RectF getBoundingBox() {
+        return boundingBox;
+    }
+
+    public String getText() {
+        return text;
     }
 }

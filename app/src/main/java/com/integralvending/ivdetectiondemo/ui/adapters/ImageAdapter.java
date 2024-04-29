@@ -1,5 +1,7 @@
 package com.integralvending.ivdetectiondemo.ui.adapters;
 
+import static android.content.Intent.getIntent;
+
 import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.content.Context;
@@ -28,17 +30,16 @@ import org.opencv.core.Mat;
 import org.opencv.imgproc.Imgproc;
 
 import java.util.ArrayList;
+import java.util.jar.Attributes;
 
 public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHolder> {
     private final MockData instancia = new MockData();
     private final ArrayList<MCharola> charolas = instancia.getCharola();
     private final ArrayList<MArticulo> articulos = instancia.getMockData();
     private ArrayList<byte[]> imageBytesList;
-
     public ImageAdapter(ArrayList<byte[]> imageBytesList) {
         this.imageBytesList = imageBytesList;
     }
-
 
     @NonNull
     @Override
@@ -54,60 +55,53 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         byte[] imageBytes = imageBytesList.get(position);
         Bitmap bitmap = BitmapFactory.decodeByteArray(imageBytes, 0, imageBytes.length);
 
-
-        //https://stackoverflow.com/questions/23202130/android-convert-byte-array-from-camera-api-to-color-mat-object-opencv
-
-        //Con un código así se puede transformar de negativo a colores normales
-
-
-        Mat orig = new Mat(bitmap.getHeight(),bitmap.getWidth(), CvType.CV_8UC1);
+        Mat orig = new Mat(bitmap.getHeight(), bitmap.getWidth(), CvType.CV_8UC1);
         Bitmap myBitmap32 = bitmap.copy(Bitmap.Config.ARGB_8888, true);
         Utils.bitmapToMat(myBitmap32, orig);
-        Imgproc.cvtColor(orig, orig, Imgproc.COLOR_BGR2RGB,4);
-
-
-
-
+        Imgproc.cvtColor(orig, orig, Imgproc.COLOR_BGR2RGB, 4);
         holder.imageView.setImageBitmap(bitmap);
 
-        int imageNumber = position + 1; // posicion
-
-        // Comparacion con la base de datos
-
-        int resultadoComparacion = -1;
-
+        int imageNumber = position + 1;
         int numeroMCharola = -1;
+        String nombre = null;
+        int total = 0, idArt = 0, idRec = 0;
 
         for (MCharola charola : charolas) {
-            // Comparar el imageNumber con el idRectangulo de la charola
+            idRec = charola.getIdRectangulo();
             if (charola.getIdRectangulo() == imageNumber) {
                 numeroMCharola = charola.getNumero();
-                break;
+
+                for (MArticulo articulo : articulos) {
+                    idArt = articulo.getIdArticulo();
+                    nombre = articulo.getNombre();
+                    total = articulo.getCantidad();
+
+                    // Agregar condición para verificar si el número de MCharola coincide con el ID de Articulo
+                    if (numeroMCharola == idArt) {
+                        Log.d("Mala", "El numero de producto " + numeroMCharola);
+                        Log.d("Mala", "El producto es" + nombre + " y el total es de" + total);
+                        holder.nombreprod.setText(nombre + " y el total es de :" + total);
+                    }
+                }
             }
         }
 
         Intent intent = new Intent(holder.itemView.getContext(), FullScreenImageActivity.class);
-
         if (numeroMCharola != -1) {
+            Log.d("Mala", "El numero enviado es " + numeroMCharola);
             intent.putExtra("NUMERO_MCHAROLA", numeroMCharola);
         }
-        holder.textViewNumber.setText("La charola N°"+imageNumber + " contiene");
 
-        // Lista de recyclerview
+        holder.textViewNumber.setText("La charola N°" + imageNumber + " contiene");
 
         // Agregar OnClickListener a la imagen
         holder.imageView.setOnClickListener(view -> {
             // Obtener la imagen en pantalla completa
             intent.putExtra("imageBytes", imageBytes);
-            intent.putExtra("imageNumber", imageNumber); // Agregar el número como extra
+            intent.putExtra("imageNumber", imageNumber);
             view.getContext().startActivity(intent);
         });
-
-
-
     }
-
-
 
     @Override
     public int getItemCount() {
@@ -119,11 +113,9 @@ public class ImageAdapter extends RecyclerView.Adapter<ImageAdapter.ImageViewHol
         public ImageView imageView;
         public ImageViewHolder(@NonNull View itemView) {
             super(itemView);
-
             textViewNumber = itemView.findViewById(R.id.textViewNumber);
             imageView = itemView.findViewById(R.id.imageView);
             nombreprod = itemView.findViewById(R.id.tvDescripcion);
-
         }
     }
 }

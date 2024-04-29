@@ -49,6 +49,8 @@ dependencies {
 
     implementation("com.google.mlkit:text-recognition:16.0.0")
 
+    implementation("org.tensorflow:tensorflow-lite-task-vision:0.3.1")
+
 
 
 

@@ -1,10 +1,5 @@
 package com.integralvending.ivdetectiondemo.ui.activities;
 
-import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
-import androidx.core.app.ActivityCompat;
-import androidx.core.content.ContextCompat;
-
 import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -17,20 +12,20 @@ import android.view.WindowManager;
 import android.widget.ImageButton;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
+import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.ActivityCompat;
+import androidx.core.content.ContextCompat;
+
 import com.integralvending.ivdetectiondemo.R;
-import com.integralvending.ivdetectiondemo.data.MockData;
 import com.integralvending.ivdetectiondemo.databinding.ActivityCamaraBinding;
-import com.integralvending.ivdetectiondemo.models.MArticulo;
-import com.integralvending.ivdetectiondemo.models.MCharola;
 
 import org.opencv.android.BaseLoaderCallback;
 import org.opencv.android.CameraBridgeViewBase;
 import org.opencv.android.LoaderCallbackInterface;
 import org.opencv.android.OpenCVLoader;
-import org.opencv.core.Core;
 import org.opencv.core.Mat;
 import org.opencv.core.MatOfByte;
-import org.opencv.core.MatOfInt;
 import org.opencv.core.Rect;
 import org.opencv.core.Scalar;
 import org.opencv.core.Size;
@@ -39,13 +34,11 @@ import org.opencv.imgproc.Imgproc;
 
 import java.io.ByteArrayOutputStream;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.concurrent.atomic.AtomicReference;
 
 public class CamaraActivity extends AppCompatActivity implements CameraBridgeViewBase.CvCameraViewListener2{
 
-    ActivityCamaraBinding binding;
     private final AtomicReference<Mat> m_mathRoi = new AtomicReference<>();
     ImageButton roi_capture;
     private CameraBridgeViewBase mOpenCvCameraView;
@@ -192,6 +185,7 @@ public class CamaraActivity extends AppCompatActivity implements CameraBridgeVie
                     VariablesGlobales.globalImageBytesList.add(stream.toByteArray());
                 }
                 startActivity(intent);
+                finish();
             } else {
                 Log.d(TAG, "m_mathRoi es nulo. No se puede capturar el ROI.");
             }
